@@ -25,7 +25,7 @@ load_lisp("string.lsp");
 create function removeProtocol(Charstring url)->Charstring
 /* TODO: Remove "HTTP://" from the beginning of a URL.
   HINT: Use function replace(). */
- as replace(replace(lower(url), 'http://', ''), '/index.html', '');
+ as replace(lower(url), 'http://', '');
 
 create function lastChar(Charstring s)->Charstring
 /* TODO: Return the last character of the string s. 
