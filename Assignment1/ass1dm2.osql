@@ -34,7 +34,7 @@ create function lastChar(Charstring s)->Charstring
 
 create function allButLastChar(Charstring s)->Charstring
 /* TODO: Rerurn all but the last characters of input string s */ 
- as "all but last cha";
+ as substring(lower(url), 0, char_length(url)-2);
 
 create function removeTrailingSlash(Charstring url)->Charstring
 /* TODO: Remove trailing slash from url.
