@@ -161,7 +161,7 @@ end;
 create function sse(Vector of Number a, Vector of Number b)->Number
 /* TODO: Calculate the sum square error between two vectors. 
   Used to check convergence of iterative calculation. */
- as 1;
+ as return sum(select power((a[i] - b[i]), 2) from Integer i order by i);
 
 
 /**********************************/
@@ -198,12 +198,14 @@ as for each Charstring p where p in pages()
 create function calculateAuthority(Charstring p)->Number 
 /* TODO: Calculate the authority of page p. 
   HINT: Use the aggregate function sum(). */
- as 1;
+ as return sum(select count(f) from Charstring f, Charstring dummy 
+                        where f in links(dummy) and f = p);
 
 create function calculateHubbiness(Charstring p)->Number 
 /* TODO: Calculate the hubbiness of a page 
   HINT: Use the aggregate function sum(). */
- as 1;
+ as return sum(select sum(authority(f)) from Charstring f 
+            where f in links(p));
 
 create function updateAuthority()->Boolean
 /* Updates the authority values of pages based on the 
@@ -215,7 +217,8 @@ create function updateAuthority()->Boolean
 create function updateHubbiness()->Boolean
 /* TODO: Update the hubbiness values of pages based on the 
   authority values of the pages that they link to. */
-as TRUE; 
+as set hubbiness(p) = calculateHubbiness(p) from Charstring p
+      where p in pages(); 
 
 create function enorm(Bag of Number b)->Number
 /* Calculates the Euclidean norm of a bag of numbers. */
@@ -232,7 +235,10 @@ create function normalizeAuthority()->Boolean
 
 create function normalizeHubbiness()->Boolean
 /*  TODO: Normalize Hubbiness() to unit length */ 
- as TRUE;
+ as set hubbiness(p) = hubbiness(p) / lenAuth
+    from Charstring p, Number lenAuth
+    where p in pages()
+      and lenAuth = enorm(hubbiness(pages()));
 
 create function HITS_iterator(Number input)->Number as
 /* Iterative step of the HITS algorithm, 
