@@ -105,7 +105,9 @@ create function showDeadPages()->Bag of Charstring
   HINT: Use stored functions links() and pages() and the notany()
         Boolean operator / function. See manual!
   NOTE: These are not the pages that do not link to pages!!! */
- as select "Name of page with unknown link structure";
+ as select f from Charstring f, Charstring dummy 
+             where f in links(dummy) and notany(f in pages());
+   
 
 create function removeDeadLinks()->Boolean
 /* TODO: Remove all links to a page f if we do not know 
@@ -113,7 +115,9 @@ create function removeDeadLinks()->Boolean
   links(dummy)=f is not NIL.
   HINT : Use the remove statement and the function showdeadPages(). 
   NOTE: These are not the pages that do not link to pages!!! */
- as TRUE;
+ as remove links(dummy) = f 
+    from Charstring f, Charstring dummy where
+    f in links(dummy) and f in showDeadPages();
 
 
 /* Note that deleting a link from page f to t, where f only likns to t
