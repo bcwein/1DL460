@@ -301,12 +301,13 @@ create function updateOutlinks() -> Boolean
 
 create function initializePageRank(Number N) -> Boolean
 /* TODO: Set initial values for rank of all pages */
-as TRUE;
+as set rank(p) = 1/N from Charstring p where p in pages();
 
 create function calculateRank(Charstring p, Number d, Number N)->Number 
 /* TODO: Calculate the rank of a page 
   HINT: Use the aggregate functions sum() and count(). */
-as 1;
+as return sum(select rank(t) / outlinks(t) from Charstring f, Charstring t 
+    where f in links(t) and f = p);
 
 create function updateRank(Number d, Number N)->Boolean
 /* Updates the authority values of pages based on the 
@@ -317,7 +318,7 @@ create function updateRank(Number d, Number N)->Boolean
 
 create function showRank()->Bag of (Number, Charstring)
 /* TODO: Returns the rank and page name for all pages */
- as select 1, 'page';
+ as select rank(f), f from Charstring f where f in pages();
 
 create function pageRank_iterator(Vector of Number sse_d_N)-> Vector of Number as
 /* Iterative step of the PageRank algorithm.
