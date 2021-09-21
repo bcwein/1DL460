@@ -306,7 +306,7 @@ as set rank(p) = 1/N from Charstring p where p in pages();
 create function calculateRank(Charstring p, Number d, Number N)->Number 
 /* TODO: Calculate the rank of a page 
   HINT: Use the aggregate functions sum() and count(). */
-as return sum(select rank(t) / outlinks(t) from Charstring f, Charstring t 
+as return (1-d)/N + d*sum(select rank(t) / outlinks(t) from Charstring f, Charstring t 
     where f in links(t) and f = p);
 
 create function updateRank(Number d, Number N)->Boolean
