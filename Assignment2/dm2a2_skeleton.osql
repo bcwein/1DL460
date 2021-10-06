@@ -53,8 +53,17 @@ create function load_transact(Charstring file)->Boolean
    transact(1) = 57
    ...etc
 */
-set bag = enumerate(read_ntuples(file));
-as true; 
+as begin
+    for each Vector v
+    where v in enumerate(read_ntuples(file))
+    begin
+        for each Integer j
+        where j in v[1]
+        begin
+            add transact(cast(v[0] as Integer)) = j;
+        end;
+    end;
+end;
 
 create function transact_bt()->Bag of <Integer t, Integer i>
 /* Displays transact() as a bag of tuples */
