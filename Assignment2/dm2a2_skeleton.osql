@@ -1,0 +1,194 @@
+/*-*-osql-*-*******************************************************************/
+
+/* 
+
+   Help directives and skeleton for database APRIORI based 
+   frequent itemset. 
+   Read all comments and code. 
+
+   Students are expected to follow the directives and complete / replace 
+   / correct code where necessary (marked with TODO) according 
+   to the function signatures, descriptions, HINTS, and NOTES.
+   Students are encouraged to experiment with explicit or implicit 
+   options and alternative implementations. 
+
+*/
+
+load_lisp("string.lsp");
+
+/* Stored function/relation/table to store the transactions */
+create function transact(Integer t)->Bag of Integer i as stored;
+
+create function temp_itemsets1() -> Bag of Vector as stored;
+create function temp_itemsets2() -> Bag of Vector as stored;
+create function temp_itemsets_final() -> Bag of Vector as stored;
+create function temp_items() -> Bag of Vector as stored;
+
+create function enumerate(Bag of Vector bv) ->Bag of <Integer i, Vector>
+/* TODO: Enumerates a bag of vectors bv from 1 to count(bv) 
+   Example:
+   3 7 14 23 57 --> <1, (3 7 14 23 57)>
+...etc
+*/
+as begin
+    set i=1;
+    for each Vector w 
+    where w in bv
+        begin
+            return <i, w>;
+            set i = i + 1;
+        end;
+end;
+
+
+create function load_transact(Charstring file)->Boolean
+/* TODO: Loads stored function transact() from a file of transactions 
+   and put numbering to every transaction
+   Hint: use (read_ntuples) and (enumerate) functions
+   Example: 
+   transact(1) = 3
+   transact(1) = 7
+   transact(1) = 14
+   transact(1) = 23
+   transact(1) = 57
+   ...etc
+*/
+/*
+set bag = enumerate(read_ntuples(file));
+*/
+as true; 
+
+create function transact_bt()->Bag of <Integer t, Integer i>
+/* Displays transact() as a bag of tuples */
+  as select t, i 
+     where i in transact(t);
+
+create function items_suppby(Bag of <Integer, Integer> bt)
+                             ->Bag of <Integer i, Vector vtids>
+/* TODO: Calculate a vector of supporting tids (transaction id)s for each 
+         unique item in the bag of transactions bt.
+   HINT: Use the groupby() and vectorof() functions 
+   NOTE: This is a dummy function to illustrated the intended result.*/  
+  as  select i, tid 
+      from Integer i, Integer tid 
+      where i = 1 and tid = 1;
+
+create function freq_items(Bag of <Integer, Integer> bt, 
+                           Integer minsupp)
+                           -> Bag of Vector
+/* TODO: Calculate the FREQUENT items and their ABSOLUTE support, i.e., 
+         support count in the bag of transactions bt according to minsupp.
+   HINT: Use the items_suppby() and count() functions. 
+   NOTE: This is a dummy function to illustrated the intended result.*/  
+  as select vectorof(i)
+     from Integer i
+     where i=1;
+
+
+create function subset(Vector of Number a, Vector of Number b)->Boolean as
+/* Test if a is a subset of b */
+begin
+  declare Boolean flag;
+  set flag = TRUE;
+  for each Number i where i in a
+    if notany(select i where i in b) then set flag = FALSE; 
+  return flag;
+end;
+
+
+create function counter(Vector a) -> Number 
+/* Count the number of occurrences of a in transact() */
+as 
+begin
+  declare Number c;
+  set c=0;
+  for each Vector item where item in (select vectorof(transact(i)) from Integer i where a[0] in transact(i))
+        if subset(a, item) then set c=c+1;
+  return c;
+end;
+
+create function vectorBag(Vector v) -> Bag of Object
+  as select v[i] 
+     from Integer i;
+
+create function combine(Vector a, Vector b) -> Vector ret as
+  select  vectorof(select distinct e from Number i, Number e 
+                  where (i, e) in bagify(concat(a, b)));
+
+
+create function generate_candidates(Bag of Vector n1, Bag of Vector n2, Integer minsupp) -> Bag of Vector  as
+  select distinct sort(vectorBag(combine(x1, x2))) from Vector x1, Vector x2 where x1 in n1 and x2 in n2 and dim(combine(x1, x2)) = (dim(first(n1))+1) and counter(combine(x1, x2)) > minsupp; 
+
+create function generate_freq_itemsets(Integer minsupp) -> Bag of <Vector, Integer> as
+begin
+  declare Boolean loopflag;
+  dropfunction(#'temp_itemsets_final',1);
+  dropfunction(#'temp_itemsets1',1);
+  dropfunction(#'temp_itemsets2',1); 
+  dropfunction(#'temp_items',1); 
+
+  set loopflag = true;
+  add temp_items() = freq_items(transact_bt(), minsupp);
+  add temp_itemsets_final() = temp_items();
+  add temp_itemsets1() = generate_candidates(temp_items(), temp_items(), minsupp);
+
+  while loopflag do
+    add temp_itemsets2() = generate_candidates(temp_itemsets1(), temp_itemsets1(), minsupp);
+    add temp_itemsets_final() = temp_itemsets1();
+    dropfunction(#'temp_itemsets1',1);
+    add temp_itemsets1() = temp_itemsets2();
+    dropfunction(#'temp_itemsets2',1);
+    if count(temp_itemsets1()) < 2 then set loopflag = false;
+  end while;
+
+  return (select i, supp from Vector i, Number supp where i in temp_itemsets_final() and supp = counter(i));
+
+end;
+
+/* -------------------------Test your frequent itemset mining----------------------------- */
+load_transact("transactions1000.nt");
+select i, j from Vector i, Integer j where <i,j> in generate_freq_itemsets(150);
+
+
+/* ============================================================================ */
+/* The below part is just to run the propad to compare with your implementation */
+/* ============================================================================ */
+
+create function transactions() -> Bag of Vector of Number
+   as stored;
+
+/* Read transactions from the file */
+set transactions() = read_ntuples('data/transactions1000.nt');
+/* PLOTTING THE NUMBER OF FREQUENT ITEMSETS PER SUPPORT THRESHOLD */
+
+create function fis_count(Number minsuppp) -> Number
+  as stored;
+
+/* Run propad and apriori for different minimum support values side by side 
+set fis_count(minsupp) = count(propad(transactions(), minsupp)), count(generate_freq_itemsets(minsupp))
+  from integer minsupp
+  where minsupp in 10*iota(3, 30); */
+  
+set fis_count(minsupp) = count(propad(transactions(), minsupp))
+  from integer minsupp
+  where minsupp in 10*iota(3, 30);
+
+create function fis_countap(Number minsuppp) -> Number
+  as stored;
+  
+/* TODO: Update the function below so it can count the fis for your apriori implementatin
+         then compare the values in the generated chart below. 
+*/
+set fis_countap(minsupp) = -count(propad(transactions(), minsupp))
+  from integer minsupp
+  where minsupp in 10*iota(3, 30);
+  
+/* Plot the number of frequent itemsets for minimum support values in 30, 40, 50 ... 300 */
+enable_java();
+create function charter(object ct, Vector v) -> object as foreign "JAVA:SVGenerator/charter";
+create function display(object ct,Bag of Object x) -> object as select charter(ct,sort(x));
+display('extLineChart',vectorof(select {minsupp, fis_count(minsupp),fis_countap(minsupp)} from integer minsupp));
+
+/* you can explore other types of plot functions, for help type this 
+display('help',''); */
+dropfunction(#'transactions',1);  
