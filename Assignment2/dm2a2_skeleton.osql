@@ -53,9 +53,7 @@ create function load_transact(Charstring file)->Boolean
    transact(1) = 57
    ...etc
 */
-/*
 set bag = enumerate(read_ntuples(file));
-*/
 as true; 
 
 create function transact_bt()->Bag of <Integer t, Integer i>
