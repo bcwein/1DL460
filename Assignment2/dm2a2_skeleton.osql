@@ -73,9 +73,9 @@ create function items_suppby(Bag of <Integer, Integer> bt)
          unique item in the bag of transactions bt.
    HINT: Use the groupby() and vectorof() functions 
    NOTE: This is a dummy function to illustrated the intended result.*/  
-  as  select itm[1], vectorof(itm[0]) 
-      from Vector itm
-      where itm in bt group by itm[1];
+  as  select itm, vectorof(tid) 
+      from Integer tid, Integer itm
+      where <tid, itm> in bt group by itm;
 
 create function freq_items(Bag of <Integer, Integer> bt, 
                            Integer minsupp)
@@ -84,9 +84,9 @@ create function freq_items(Bag of <Integer, Integer> bt,
          support count in the bag of transactions bt according to minsupp.
    HINT: Use the items_suppby() and count() functions. 
    NOTE: This is a dummy function to illustrated the intended result.*/  
-  as select vectorof(itm[0])
-     from Bag itm
-     where itm in items_suppby(bt) and count(itm[1]) >= minsupp;
+  as select vectorof(i)
+     from Integer i, Vector j
+     where <i, j> in items_suppby(bt) and count(j) >= minsupp;
 
 
 create function subset(Vector of Number a, Vector of Number b)->Boolean as
@@ -152,6 +152,7 @@ end;
 /* -------------------------Test your frequent itemset mining----------------------------- */
 load_transact("transactions1000.nt");
 select i, j from Vector i, Integer j where <i,j> in generate_freq_itemsets(150);
+select 'abc';
 
 
 /* ============================================================================ */
