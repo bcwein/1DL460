@@ -73,9 +73,9 @@ create function items_suppby(Bag of <Integer, Integer> bt)
          unique item in the bag of transactions bt.
    HINT: Use the groupby() and vectorof() functions 
    NOTE: This is a dummy function to illustrated the intended result.*/  
-  as  select itm[1], vectorof(itm[0]) 
+  as  select itm[0], vectorof(itm[1]) 
       from Vector itm
-      where itm in bt group by itm[1];
+      where itm in bt group by itm[0];
 
 create function freq_items(Bag of <Integer, Integer> bt, 
                            Integer minsupp)
@@ -85,7 +85,7 @@ create function freq_items(Bag of <Integer, Integer> bt,
    HINT: Use the items_suppby() and count() functions. 
    NOTE: This is a dummy function to illustrated the intended result.*/  
   as select vectorof(itm[0])
-     from Bag itm
+     from Vector itm
      where itm in items_suppby(bt) and count(itm[1]) >= minsupp;
 
 
