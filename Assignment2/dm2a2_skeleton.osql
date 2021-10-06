@@ -84,9 +84,9 @@ create function freq_items(Bag of <Integer, Integer> bt,
          support count in the bag of transactions bt according to minsupp.
    HINT: Use the items_suppby() and count() functions. 
    NOTE: This is a dummy function to illustrated the intended result.*/  
-  as select vectorof(i)
-     from Integer i
-     where i=1;
+  as select vectorof(itm[0])
+     from Bag itm
+     where itm in items_suppby(bt) and count(itm[1]) >= minsupp;
 
 
 create function subset(Vector of Number a, Vector of Number b)->Boolean as
