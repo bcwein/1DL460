@@ -22,13 +22,13 @@ create function temp_itemsets2() -> Bag of Vector as stored;
 create function temp_itemsets_final() -> Bag of Vector as stored;
 create function temp_items() -> Bag of Vector as stored;
 
+/* Enumerate validated 20211007*/
 create function enumerate(Bag of Vector bv) ->Bag of <Integer i, Vector>
 /* TODO: Enumerates a bag of vectors bv from 1 to count(bv) 
    Example:
    3 7 14 23 57 --> <1, (3 7 14 23 57)>
 ...etc
 */
-
 as begin
   set i=1;
   for each Vector v where v in bv
@@ -38,7 +38,7 @@ as begin
     end;
 end;
 
-
+/* load_transact validated 20211011*/
 create function load_transact(Charstring file)->Boolean
 /* TODO: Loads stored function transact() from a file of transactions 
    and put numbering to every transaction
@@ -51,21 +51,31 @@ create function load_transact(Charstring file)->Boolean
    transact(1) = 57
    ...etc
 */
-  
-as 
-  for each Vector w where w in enumerate(read_ntuples(file))
+as begin
+  clear_function("transact");
+  for each Integer i, Integer t, Vector v 
+  where i in v and <t, v> in enumerate(read_ntuples(file))
   begin
-      for each Integer i where i in w[1]
-      begin
-        add transact(cast(w[0] as Integer)) = i;
-      end;
+      add transact(cast(t as Integer)) = i;
   end;
+end;
 
+/* transact_bt validated 20211011*/
 create function transact_bt()->Bag of <Integer t, Integer i>
 /* Displays transact() as a bag of tuples */
   as select t, i 
      where i in transact(t);
 
+
+/*
+Suggestion from Yi:
+
+groupby((select i, tid 
+                    from Integer i, Integer tid 
+                    where i in transact(tid)), #'vectorof');
+*/
+
+/* items_suppby validated 20211011*/
 create function items_suppby(Bag of <Integer, Integer> bt)
                              ->Bag of <Integer i, Vector vtids>
                              /* tid, item */
@@ -73,9 +83,10 @@ create function items_suppby(Bag of <Integer, Integer> bt)
          unique item in the bag of transactions bt.
    HINT: Use the groupby() and vectorof() functions 
    NOTE: This is a dummy function to illustrated the intended result.*/  
-  as  select itm, vectorof(tid) 
+  as  select itm, vectorof(tid)
       from Integer tid, Integer itm
       where <tid, itm> in bt group by itm;
+
 
 create function freq_items(Bag of <Integer, Integer> bt, 
                            Integer minsupp)
@@ -86,7 +97,7 @@ create function freq_items(Bag of <Integer, Integer> bt,
    NOTE: This is a dummy function to illustrated the intended result.*/  
   as select vectorof(itm)
      from Integer itm, Vector tids
-     where <itm, tids> in items_suppby(bt) and count(tids) >= minsupp;
+     where <itm, tids> in items_suppby(bt) and count(cast(tids as Bag)) >= minsupp;
 
 
 create function subset(Vector of Number a, Vector of Number b)->Boolean as
@@ -152,7 +163,6 @@ end;
 /* -------------------------Test your frequent itemset mining----------------------------- */
 load_transact("transactions1000.nt");
 select i, j from Vector i, Integer j where <i,j> in generate_freq_itemsets(150);
-select 'abc';
 
 
 /* ============================================================================ */
