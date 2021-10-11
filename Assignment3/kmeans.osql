@@ -1,0 +1,85 @@
+/*-*-sql-*-*******************************************************************
+ * AMOS2
+ *
+ * Author: (c) 2013, Andrej Andrejev, UDBL
+ * $RCSfile: kmeans.osql,v $
+ * $Revision: 1.4 $ $Date: 2015/05/13 16:21:56 $
+ * $Revision: 1.5 $ $Date: 2019/03/10 10:41:32 $ Updated by Miran Nadir
+ * $State: Exp $ $Locker:  $
+ *
+ * Description: Example implementation of parallel k-Means clustering: demo script
+ *
+ ****************************************************************************
+ * $Log: kmeans.osql,v $
+ * Revision 1.4  2015/05/13 16:21:56  andan342
+ * Using start_nameserver(), start_amos()
+ *
+ * Revision 1.3  2014/05/16 16:56:08  thatr500
+ * added function run_program()
+ *
+ * Revision 1.2  2014/05/11 22:29:57  andan342
+ * Changed to use iterate(), added more comments, added skeleton scripts for the course
+ *
+ * Revision 1.1  2013/06/21 21:01:55  andan342
+ * Added example implementation of Parallel k-Means clustering
+ *
+ *
+ ****************************************************************************/
+
+/*Run a nameserver*/
+start_nameserver("mynameserver");
+
+/*Run a worker named p1*/
+start_engine("p1",""); 
+start_engine("p2","");
+start_engine("p3","");
+start_engine("p4","");
+
+/* The node just started will be the coordinator node, p1..p4 - worker nodes */
+register("coordinator");
+
+/* Load only coordinator code here */
+< 'kmeans_coordinator.osql';
+
+/* Load only worker code on the worker nodes */
+broadcast("< 'kmeans_node.osql';");
+
+/* Initialize peer random number generators differently */
+broadcast("random_init_by_hash(this_amosid());");
+
+/* Generate 12 spherical clusters, 3 on each node */
+broadcast("add partition() = GenSpherical(100, 3, 0.05, 0.1, 0.5);");
+
+set :k = 3; /* number of clusters to look for */
+
+create function cast_tobagofvectorreal(Bag of OBJECT bo) -> Bag of Vector of Real
+as for each Object i  where i in(bo) return i;
+
+/* Two-phase sampling of datapoints, selecting k on each node, then selecting k from them */
+set :castedvalue = castreceive("sample_partition",{:k});
+set :temp = cast_tobagofvectorreal(castreceive("sample_partition",{:k}));
+set :centroids = vectorof(select sample(:temp,:k));
+
+/* Run the algorithm */
+set :solution = parallel_kmeans(:centroids);
+
+/* Show the results. You need to have GNUPLOT installed on your machine.
+   See the assignment page for instruction how to install it
+scatter2p(cast((select castreceive("classify_partition_node",{:solution})) as Vector));
+*/
+
+/* Show the results. using to scatter plots using the SVGenerator class. */
+enable_java();
+create function charter(object ct, Vector v) -> object as foreign "JAVA:SVGenerator/charter";
+create function display(object ct,Bag of Object x) -> object as select charter(ct,sort(x));
+
+display('SPlotChart',:castedvalue);
+display('SPlotChart',:solution);
+/* Remove the data on nodes */
+broadcast("remove partition() = v from Vector v;");
+
+/* To stop all Amos nodes including nameserver and the workers*/
+kill_the_federation();
+
+
+
