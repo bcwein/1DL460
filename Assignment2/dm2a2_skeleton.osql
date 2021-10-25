@@ -194,7 +194,7 @@ create function fis_countap(Number minsuppp) -> Number
 /* TODO: Update the function below so it can count the fis for your apriori implementatin
          then compare the values in the generated chart below. 
 */
-set fis_countap(minsupp) = -count(propad(transactions(), minsupp))
+set fis_countap(minsupp) = -count(generate_freq_itemsets(minsupp))
   from integer minsupp
   where minsupp in 10*iota(3, 30);
   
