@@ -39,10 +39,10 @@ start_engine("p4","");
 register("coordinator");
 
 /* Load only coordinator code here */
-< 'kmeans_coordinator.osql';
+< 'kmeans_coordinator_skeleton.osql';
 
 /* Load only worker code on the worker nodes */
-broadcast("< 'kmeans_node.osql';");
+broadcast("< 'kmeans_node_skeleton.osql';");
 
 /* Initialize peer random number generators differently */
 broadcast("random_init_by_hash(this_amosid());");
