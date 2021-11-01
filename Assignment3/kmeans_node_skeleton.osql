@@ -26,7 +26,7 @@ create function classify_partition(Vector of Vector of Number vc)
          in form {count, {coordinate, ...}} 
    HINT: use count() and aggv() aggregate functions                                                 */
 create function count_col_means(Bag of Vector of Number bv) -> Vector
-  as select count(b) from Bag of Number b where b = (select from bv);
+  as select {count(bv), aggv(bv, #'avg')};
 
 /* Return kmeans iteration results for given vector of centroids 
    in from {id, {count, {coodinate, ...}}} */
