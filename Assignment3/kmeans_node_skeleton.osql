@@ -15,7 +15,7 @@ create function sample_partition(Integer k) -> Bag of Vector of Object as sample
    HINT: leastk() might help selecting desired tuple from a bag of (key, value) pairs               */
 create function get_nearest_centroid_id(Vector of Number p, Vector of Vector of Number vc) 
                                        -> (Number d, Integer nci) as  
-	select 0.0, 1;
+	select cast(euclid(p, cast(v as Vector of Number)) as Number), 0 from Vector v where v in vc;
 
 /* TODO: Return nearest centroid id for each datapoint in partition()                               */
 create function classify_partition(Vector of Vector of Number vc) 
