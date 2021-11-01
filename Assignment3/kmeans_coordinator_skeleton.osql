@@ -26,9 +26,8 @@ create function weighted_col_means(Bag of Vector bwv) -> Vector of Number as
    HINT: use the above-defined weighted_col_means() as an aggregate function,
          see the data structure returned by kmeans_node_step(),
          vectorize() to get collect the groups results into a new vector of centroids           */
-
 create function parallel_kmeans_step(Vector of Vector of Number vc) -> Vector of Vector of Number as 
-  select v from Vector of Vector of Number v where v in castreceive('kmeans_node_step', {vc});
+  select vectorize(weighted_col_means(v)) from Vector of Vector of Number v where v in castreceive('kmeans_node_step', {vc});
 
 /* Run iterations until centroids are stable */
 create function parallel_kmeans(Vector of Vector of Number vc0) -> Vector of Vector of Number
