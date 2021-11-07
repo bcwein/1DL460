@@ -68,18 +68,22 @@ set :solution = parallel_kmeans(:centroids);
 scatter2p(cast((select castreceive("classify_partition_node",{:solution})) as Vector));
 */
 
+print(castreceive("classify_partition_node",{:solution}));
+scatter2p(cast((select castreceive("classify_partition_node",{:solution})) as Vector));
+
 /* Show the results. using to scatter plots using the SVGenerator class. */
+/*
 enable_java();
 create function charter(object ct, Vector v) -> object as foreign "JAVA:SVGenerator/charter";
 create function display(object ct,Bag of Object x) -> object as select charter(ct,sort(x));
 
 display('SPlotChart',:castedvalue);
 display('SPlotChart',:solution);
-/* Remove the data on nodes */
+/* Remove the data on nodes 
 broadcast("remove partition() = v from Vector v;");
 
-/* To stop all Amos nodes including nameserver and the workers*/
+/* To stop all Amos nodes including nameserver and the workers
 kill_the_federation();
-
+*/
 
 
