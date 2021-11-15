@@ -198,8 +198,7 @@ as for each Charstring p where p in pages()
 create function calculateAuthority(Charstring p)->Number 
 /* TODO: Calculate the authority of page p. 
   HINT: Use the aggregate function sum(). */
- as return sum(select count(f) from Charstring f, Charstring dummy 
-                        where f in links(dummy) and f = p);
+ as return sum(select hubbiness(f) from Charstring f where p in links(f));
 
 create function calculateHubbiness(Charstring p)->Number 
 /* TODO: Calculate the hubbiness of a page 
