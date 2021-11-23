@@ -19,8 +19,8 @@ create function w_times_v(Vector wv) -> Vector of Number as
   select cast(wv[1] as Vector of Number)* cast(wv[0] as Number);
 
 /* TODO: Compute weighted average vector of vectors given in form {weight, {coordinate, ...}}  */
-create function weighted_col_means(Bag of Vector bwv) -> Vector of Number as
-  select w_times_v(wv) from Vector wv where wv in bwv;
+create function weighted_col_means(Bag of Vector bwv) -> Vector of Number as 
+  select aggv((select w_times_v(wv) from Vector wv where wv in bwv), #'sum') / sum(select cast(wv[0] as Number) from Vector wv where wv in bwv);
 
 /* TODO: Compute average centroids based on new centroids received from peers 
    HINT: use the above-defined weighted_col_means() as an aggregate function,
